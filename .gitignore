@@ -1,0 +1,38 @@
+# Original Radarize source repository
+/radarize_ae/
+
+# Python and Conda environments
+.conda-env/
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Local editor settings
+.vscode/
+
+# Datasets and large files
+/dataset/
+data/raw/
+*.zip
+*.bag
+*.db3
+*.mcap
+*.npy
+*.npz
+
+# Model checkpoints
+*.pth
+*.pt
+*.ckpt
+
+# Temporary files
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Conda history files
+radarize_vis_history.yml*
