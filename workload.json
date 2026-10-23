@@ -1,0 +1,25 @@
+{
+  "team_name": "RadaVis",
+  "students": [
+    {
+      "first_name": "Aditya",
+      "last_name": "Manikoth",
+      "workload": 0.25
+    },
+    {
+      "first_name": "Rahela",
+      "last_name": "Vasiu",
+      "workload": 0.25
+    },
+    {
+      "first_name": "Helma",
+      "last_name": "Torabi Paridari",
+      "workload": 0.25
+    },
+    {
+      "first_name": "Mehran",
+      "last_name": "Farhadi",
+      "workload": 0.25
+    }
+  ]
+}
