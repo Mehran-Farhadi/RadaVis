@@ -1,0 +1,33 @@
+{
+  "team_name": "RadaVis",
+  "students": [
+    {
+      "student_id": "k12249877",
+      "first_name": "Aditya",
+      "last_name": "Manikoth",
+      "email": "",
+      "github_user": ""
+    },
+    {
+      "student_id": "k52211530",
+      "first_name": "Rahela",
+      "last_name": "Vasiu",
+      "email": "",
+      "github_user": ""
+    },
+    {
+      "student_id": "k12515118",
+      "first_name": "Helma",
+      "last_name": "Torabi Paridari",
+      "email": "",
+      "github_user": ""
+    },
+    {
+      "student_id": "k12506178",
+      "first_name": "Mehran",
+      "last_name": "Farhadi",
+      "email": "",
+      "github_user": "Mehran-Farhadi"
+    }
+  ]
+}
