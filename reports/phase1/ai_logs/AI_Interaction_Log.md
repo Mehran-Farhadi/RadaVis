@@ -250,6 +250,88 @@ The initial observations suggested by Claude were checked quantitatively against
 
 **Next investigation:** Visualize error versus speed and compare results with and without the suspected anomalous interval. Validate the reference signal and repeat the analysis on additional held-out sequences.
 
+## AI-05 — Error vs. Speed Visualization
+  
+**Phase:** Phase I — Model Behavior Analysis
+
+### 1. Objective
+
+Investigate whether the Radarize Translation model's velocity prediction errors depend on motion speed, and examine the influence of the suspected ground-truth anomaly at frames 546–559.
+
+### 2. Prompt Given to Claude
+
+> Using our existing `bot_beckman_5thfloor_1` predictions, create an interactive Error vs. Speed visualization for Phase I.
+>
+> Show signed error and absolute error across speed ranges, and compare results with and without frames 546–559 (suspected GT anomaly). Use binned summaries to avoid overplotting.
+>
+> Save the notebook in `notebooks/phase1/` and generate an HTML output. Explain what the plot reveals, but don't assume the GT anomaly is confirmed.
+
+### 3. AI Suggestions and Implementation
+
+Claude developed an interactive Error vs. Speed visualization using Altair.
+
+The visualization includes:
+
+- Speed bins of 0.05 m/s.
+- Signed forward velocity error (`vx`).
+- Signed lateral velocity error (`vy`).
+- Absolute velocity error.
+- Median, mean, interquartile range, and 10–90% interval summaries.
+- Comparison of all frames against results excluding frames 546–559.
+- Interactive bin selection to inspect when errors occur in the time series.
+- Alternative speed definitions for examining the robustness of observed patterns.
+
+### 4. Initial Findings
+
+**Speed-dependent bias:** Claude reported that the median forward prediction error changes from approximately +0.075 m/s at 0.15–0.20 m/s to −0.12 m/s at 0.35–0.40 m/s. This suggests overestimation at some lower speeds and underestimation at higher speeds.
+
+**Absolute error:** Errors appear lowest around 0.20–0.30 m/s and increase toward the lower and higher ends of the observed speed range.
+
+**Suspected ground-truth anomaly:** Excluding frames 546–559 changes the results mainly in the 0.15–0.20 m/s speed bin. The broader speed-dependent pattern appears to remain.
+
+**Lateral velocity:** Claude reported relatively small median lateral prediction errors across speed bins.
+
+These are initial findings from one test sequence and should not be generalized to other environments or platforms without further evaluation.
+
+### 5. Human Verification and Decisions
+
+We downloaded and saved the notebook and HTML visualization in the RadaVis repository.
+
+We opened the HTML locally in Chrome and visually confirmed that the speed-bin plots, error summaries, and comparison groups are displayed.
+
+We accepted the binned visualization because it makes systematic error patterns easier to inspect than a dense scatterplot.
+
+We also accepted the comparison with and without the suspected anomalous frames as a sensitivity analysis.
+
+However, we did not accept the claim that the ground-truth signal is faulty as a confirmed explanation. The underlying odometry and radar data require further investigation.
+
+The second notebook has not yet been independently re-executed by the team, and the reported statistics still require independent numerical verification.
+
+### 6. Reflection
+
+Claude helped transform observations from the first time-series visualization into a more specific, testable research question.
+
+The second visualization suggests that the model may predict velocity less accurately at some speeds and that the definition of motion speed can influence the interpretation.
+
+The main limitation is that the analysis is based on only one robot sequence. Furthermore, correlation between prediction error and ground-truth speed does not establish the cause of the error.
+
+Human judgment remains important for selecting meaningful comparisons, checking the model outputs, and avoiding unsupported conclusions.
+
+### 7. Artifacts
+
+- `notebooks/phase1/02_error_vs_speed.ipynb`
+- `results/phase1/main_0/bot_beckman_5thfloor_1_error_vs_speed.html`
+- `results/phase1/main_0/bot_beckman_5thfloor_1_predictions.npz`
+
+### 8. Next Steps
+
+1. Independently execute the second notebook and verify its reported statistics.
+2. Investigate the suspected ground-truth anomaly using raw odometry data.
+3. Repeat the analysis on additional held-out sequences.
+4. Compare high-error and low-error radar heatmaps.
+
+**Status:** Visualization implemented and inspected locally. Further numerical validation pending.
+
 ---
 
 ## Overall AI-Assisted Workflow Reflection
