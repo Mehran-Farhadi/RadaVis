@@ -70,7 +70,6 @@ Possible visualizations include:
 
 - Ground Truth vs. Predicted Velocity
 - Velocity Error Distributions
-- Error vs. Motion Speed
 - Error by Platform Type
 - Comparison of Low-Error and High-Error Samples
 - Interactive Filtering and Exploration
@@ -160,7 +159,7 @@ Please do not install the following heavy dependencies unless we decide they are
 
 These dependencies may be needed later for model execution and advanced analysis.
 
-The planned approach is to use an NVIDIA Jetson AGX Orin running Ubuntu for computationally intensive tasks. Its software compatibility and model setup still need to be verified.
+We use an NVIDIA Jetson AGX Orin running Ubuntu 20.04 for Radarize preprocessing and model inference. The Translation ResNet18 checkpoint has been successfully evaluated using PyTorch with CUDA. Visualization notebooks are executed separately on Windows.
 
 ## 5. Installation Guide
 
@@ -180,8 +179,10 @@ This downloads our group project files.
 Run:
 
 ```bash
-conda create -n RadaVis python=3.9 pip -y
-conda activate RadaVis
+conda create -n RadaVisViz311 python=3.11 -y
+conda activate RadaVisViz311
+
+python -m pip install "numpy==1.26.4" "pandas==2.2.3" "altair==6.0.0" ipykernel jupyterlab nbconvert nbclient nbformat
 ```
 
 This creates a dedicated Python environment without modifying your existing base environment.
@@ -191,7 +192,7 @@ This creates a dedicated Python environment without modifying your existing base
 Run:
 
 ```bash
-conda install -c conda-forge numpy=1.23.5 pandas matplotlib=3.6.3 jupyterlab ipykernel -y
+python -m pip install "numpy==1.26.4" "pandas==2.2.3" "altair==6.0.0" matplotlib ipykernel jupyterlab nbconvert nbclient nbformat
 ```
 
 These packages support numerical analysis, visualization, and Jupyter Notebooks.
@@ -199,7 +200,7 @@ These packages support numerical analysis, visualization, and Jupyter Notebooks.
 ### Step 4 — Verify Installation
 
 ```bash
-python -c "import numpy, pandas, matplotlib, jupyterlab, ipykernel; print('RadaVis environment ready!')"
+python -c "import numpy, pandas, matplotlib, altair, ipykernel; print('RadaVis environment ready!')"
 ```
 
 Expected output:
@@ -316,12 +317,12 @@ These observations are preliminary. In particular, the suspected reference-data 
 
 ### Reproducing the Visualization
 
-The visualization notebook was successfully executed on Windows using the `RadaVis` Conda environment and Altair 6.0.
+The visualization notebook was successfully executed on Windows using the `RadaVisViz311` Conda environment and Altair 6.0.
 
 From the repository root:
 
 ```bash
-conda activate RadaVis
+conda activate RadaVisViz311
 python -m pip install "altair==6.0.0"
 python -m jupyter nbconvert --to notebook --execute "notebooks/phase1/01_velocity_timeseries.ipynb" --output "01_velocity_timeseries_executed.ipynb"
 ```
@@ -335,10 +336,8 @@ The original radar dataset and pretrained checkpoint are not required for viewin
 The initial analysis has several limitations:
 
 - Only one robot sequence has been analyzed so far.
-- The lightweight preprocessing pipeline still requires validation against the original Radarize processing workflow.
 - Ground-truth anomalies and potential temporal misalignment must be investigated.
 - Additional held-out sequences and different platforms are needed to test generalizability.
-- Model inference should be preserved as a reproducible script in the group repository.
 
 Next, we will investigate prediction errors as a function of motion speed and acceleration, compare representative low- and high-error samples, and expand the analysis to more held-out sequences.
 
@@ -350,9 +349,71 @@ Significant Claude interactions and the team's decisions are documented in:
 
 `reports/phase1/ai_logs/AI_Interaction_Log.md`
 
----
+## 8. Reproducibility — Radarize Translation Model
 
-### Midpoint Submission
+We reproduced the Radarize Translation model pipeline using the real `bot_beckman_5thfloor_1` sequence and the pretrained `main_0` checkpoint.
+
+### Data Preprocessing
+
+The script `src/prepare_translation_npz.py` converts the original ROS bag into a model-compatible NPZ file containing:
+
+- `time`: `(1798,)`
+- `radar_d`: `(1798, 1, 60, 181)`
+- `radar_de`: `(1798, 1, 60, 181)`
+- `velo_gt`: `(1798, 3)`
+
+The script uses the original Radarize radar-processing functions and calibration files.
+
+It runs on our Jetson Ubuntu environment with the necessary ROS bag and scientific Python dependencies.
+
+Example preprocessing command (Jetson Ubuntu):
+
+source ~/venvs/radavis_preprocess/bin/activate
+unset PYTHONPATH
+cd ~/RadaVis/radarize_ae
+PYTHONPATH="$PWD" python ../src/prepare_translation_npz.py
+
+The script requires the original Radarize repository, radar calibration files, and the selected ROS bag.
+
+Note: The current script is specific to bot_beckman_5thfloor_1 and writes to data/processed/bot_beckman_5thfloor_1.npz. Running it again will overwrite that output file, so existing results should be backed up first.
+
+We verified reproducibility by running a separate test copy and comparing the generated arrays against the original processed NPZ.
+
+### Model Inference
+
+The script `src/run_translation_inference.py` loads the pretrained Translation ResNet18 checkpoint and predicts two-dimensional velocity.
+
+Example command, from the RadaVis project root on Jetson:
+
+```bash
+python3 src/run_translation_inference.py \
+  --input data/processed/bot_beckman_5thfloor_1.npz \
+  --checkpoint models/main_0/transnet18.pth \
+  --output results/phase1/main_0/bot_beckman_5thfloor_1_predictions_reproduced.npz
+```
+
+The script supports CPU or CUDA inference and produces predictions, ground-truth velocities, and timestamps.
+
+### Reproducibility Verification
+
+Both stages were independently rerun on the NVIDIA Jetson AGX Orin.
+
+**Preprocessing:** All four output arrays matched the original processed data exactly (`np.array_equal=True`, maximum difference = 0).
+
+**Inference:** All five saved prediction-output arrays matched the original inference results, with no differences at the reported numerical precision.
+
+The reproduced evaluation results were:
+
+| Metric | vx (m/s) | vy (m/s) |
+|---|---:|---:|
+| MAE | 0.04838 | 0.02498 |
+| RMSE | 0.06666 | 0.03462 |
+
+These checks establish reproducibility for this sequence, checkpoint, and environment. Additional sequences remain to be evaluated.
+
+The original ROS bags, pretrained checkpoints, and large processed datasets are not committed to GitHub. They must be obtained separately from the official Radarize resources.
+
+## 9. Midpoint Submission
 
 Required:
 
@@ -362,7 +423,7 @@ Required:
 
 The video should introduce the problem, summarize the findings of both pairs, show important visualizations, and outline the Phase II plan.
 
-### Final Submission
+## 10. Final Submission
 
 Required:
 
