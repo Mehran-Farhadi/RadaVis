@@ -132,19 +132,6 @@ We use **Visual Studio Code (VS Code)** as the main development environment.
 
 Jupyter Notebooks can be executed directly inside VS Code, so using JupyterLab in a browser is optional.
 
-### Required Tools for Team Members
-
-- Git
-- Miniconda or Anaconda
-- Visual Studio Code
-- VS Code Python extension (Microsoft)
-- VS Code Jupyter extension (Microsoft)
-- Python 3.9 in a separate Conda environment
-- NumPy
-- Pandas
-- Matplotlib
-- JupyterLab
-- ipykernel
 
 ### Not Required on Personal Laptops Yet
 
