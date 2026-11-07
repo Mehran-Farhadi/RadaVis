@@ -36,8 +36,8 @@ Radarize includes three main learning models:
 
 We focus on the **Translation Model (ResNet18)**.
 
-- **Input:** Single-channel Doppler-Azimuth Heatmap (96 × 180)
-- **Output:** Two-dimensional velocity (vx, vy)
+- **Input:** Two Doppler-Azimuth heatmaps (`radar_d` and `radar_de`), combined into a tensor of shape `(B, 2, 60, 181)`.
+- **Output:** Two-dimensional velocity (`vx`, `vy`) in m/s.
 - **Task:** Radar-based velocity estimation
 - **Framework:** PyTorch
 
@@ -255,6 +255,102 @@ Our planned workflow is to:
 6. Use these smaller outputs for visualization on personal laptops.
 
 Data availability, model checkpoint compatibility, and the final processing workflow are still being investigated.
+
+## 7. Phase I — Initial Experimental Results
+
+### Experiment Setup
+
+We evaluated the pretrained Radarize Translation ResNet18 model on a real held-out robot sequence.
+
+| Item | Configuration |
+|---|---|
+| Sequence | `bot_beckman_5thfloor_1` |
+| Platform | Robot |
+| Checkpoint | `transnet18`, `main_0` |
+| Input | Two Doppler-Azimuth heatmaps |
+| Tensor shape | `(N, 2, 60, 181)` |
+| Output | Predicted `vx` and `vy` |
+| Frames | 1,798 |
+| Duration | Approximately 59.9 seconds |
+| Inference hardware | NVIDIA Jetson AGX Orin |
+| Framework | PyTorch |
+
+We selectively obtained one ROS bag from the official Radarize dataset and processed it into model-compatible radar heatmaps and reference velocity arrays.
+
+The pretrained checkpoint was loaded and evaluated on the Jetson GPU. The resulting predictions were transferred to Windows for interactive visualization.
+
+### Prediction Accuracy
+
+| Metric | vx (m/s) | vy (m/s) |
+|---|---:|---:|
+| MAE | 0.0484 | 0.0250 |
+| RMSE | 0.0667 | 0.0346 |
+
+These results are preliminary and refer to a single held-out sequence. They are not intended to represent performance across the complete dataset.
+
+### Visualization 1 — Interactive Velocity Time Series
+
+Our first Phase I visualization was developed with Claude assistance and implemented using Altair.
+
+It compares predicted and ground-truth velocities over time, together with signed errors in both velocity components.
+
+The visualization supports interactive zooming, hovering, and frame selection.
+
+**Notebook:** `notebooks/phase1/01_velocity_timeseries.ipynb`
+
+**Prediction file:** `results/phase1/main_0/bot_beckman_5thfloor_1_predictions.npz`
+
+**HTML visualization:** `results/phase1/main_0/bot_beckman_5thfloor_1_timeseries.html`
+
+### Initial Findings
+
+The first visualization reveals several patterns worth investigating:
+
+- A substantial prediction/reference disagreement near frames 546–559, around 18.2–18.6 seconds.
+- Repeated stop-and-start motion, with predictions broadly following changes in forward velocity.
+- Smoother model predictions compared with the reference signal during cruising.
+- Possible speed-dependent prediction bias.
+- Differences between forward and lateral velocity behavior.
+
+These observations are preliminary. In particular, the suspected reference-data anomaly has not yet been confirmed.
+
+### Reproducing the Visualization
+
+The visualization notebook was successfully executed on Windows using the `RadaVis` Conda environment and Altair 6.0.
+
+From the repository root:
+
+```bash
+conda activate RadaVis
+python -m pip install "altair==6.0.0"
+python -m jupyter nbconvert --to notebook --execute "notebooks/phase1/01_velocity_timeseries.ipynb" --output "01_velocity_timeseries_executed.ipynb"
+```
+
+The notebook requires the prediction NPZ at the path listed above. It produces an interactive HTML visualization in the results directory.
+
+The original radar dataset and pretrained checkpoint are not required for viewing the HTML, but are required to reproduce the upstream inference pipeline.
+
+### Limitations and Next Steps
+
+The initial analysis has several limitations:
+
+- Only one robot sequence has been analyzed so far.
+- The lightweight preprocessing pipeline still requires validation against the original Radarize processing workflow.
+- Ground-truth anomalies and potential temporal misalignment must be investigated.
+- Additional held-out sequences and different platforms are needed to test generalizability.
+- Model inference should be preserved as a reproducible script in the group repository.
+
+Next, we will investigate prediction errors as a function of motion speed and acceleration, compare representative low- and high-error samples, and expand the analysis to more held-out sequences.
+
+### AI-Assisted Workflow
+
+Claude was used to propose and implement the initial visualization. The team independently ran the notebook, inspected the HTML output, and identified which interpretations require further verification.
+
+Significant Claude interactions and the team's decisions are documented in:
+
+`reports/phase1/ai_logs/AI_Interaction_Log.md`
+
+---
 
 ### Midpoint Submission
 
