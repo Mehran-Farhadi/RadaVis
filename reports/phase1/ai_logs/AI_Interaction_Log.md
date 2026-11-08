@@ -760,11 +760,235 @@ Independent calculations were essential for checking the AI-generated visualizat
 
 **Status:** Implemented, independently executed, and numerically verified for the selected sequence. Additional data and causal investigation remain necessary.
 
----
+## 8. AI-06 — Radar Input and Error Explorer
 
-## 8. Overall Reflection on AI-Assisted Work
+**Phase:** Phase I — Black-box Model Behavior Analysis
+**Status:** Implemented, executed, and independently inspected on Windows.
 
-### 8.1 Benefits of AI Assistance
+### 8.1 Objective
+
+Investigate how the actual radar inputs differ between low-error and high-error predictions under similar reference-speed conditions.
+
+This visualization extends the previous time-series and error-versus-speed analyses by connecting model outputs with the two input heatmaps, `radar_d` and `radar_de`.
+
+The purpose is exploratory: to identify visible differences and formulate questions for future investigation, without making causal or explainability claims.
+
+### 8.2 AI Prompts
+
+Two significant Claude interactions were used.
+
+**Interaction A — Visualization design and implementation**
+
+Claude was asked to create an interactive Radar Input & Error Explorer using a real NPZ file containing ten selected frames organized into five low-error/high-error pairs.
+
+The requirements included:
+
+- Side-by-side visualization of both radar channels.
+- Consistent color scales within each channel.
+- Ground-truth and predicted velocities.
+- Two-dimensional prediction errors.
+- Interactive pair selection.
+- An overview of all five pairs.
+- A presentation-quality static figure.
+- Numerical verification and scientific limitations.
+
+**Interaction B — Technical and scientific audit**
+
+Claude was subsequently asked to audit the original Radarize normalization, color-scale comparability, offline HTML reproducibility, displayed numerical values, and scientific interpretation.
+
+The audit was restricted to the three AI-06 deliverables. No modification of the Human-only notebook was requested.
+
+*The complete original prompts and AI responses are retained in the Claude conversation. The descriptions above summarize their objectives rather than presenting reconstructed wording as verbatim prompts.*
+
+### 8.3 Input Data and Case Selection
+
+The source file is:
+
+`results/phase1/main_0/bot_beckman_5thfloor_1_matched_cases.npz`
+
+It contains ten frames from the held-out `bot_beckman_5thfloor_1` sequence, organized into five pairs.
+
+| Pair | Low-error frame | High-error frame |
+|---|---:|---:|
+| 1 | 192 | 386 |
+| 2 | 1681 | 667 |
+| 3 | 656 | 1050 |
+| 4 | 1676 | 1378 |
+| 5 | 188 | 62 |
+
+Each frame includes:
+
+- The two radar input channels, each of shape `(1, 60, 181)`.
+- Ground-truth velocity `(vx, vy)`.
+- Predicted velocity `(vx, vy)`.
+- Reference speed.
+- Two-dimensional prediction error.
+- Frame index and timestamp.
+
+Pairs were selected within narrow reference-speed intervals. However, their lateral velocities and recording times are not identical.
+
+Frames 546–559, previously identified as suspicious, were excluded.
+
+### 8.4 Visualization Design
+
+Claude implemented an interactive visualization featuring:
+
+1. An overview of all five pairs, comparing prediction errors, reference speeds, and lateral reference velocities.
+2. A selector that switches between the five pairs.
+3. Numerical detail panels for the selected low-error and high-error frames.
+4. A 2×2 grid of actual radar heatmaps.
+5. Separate colorbars for `radar_d` and `radar_de`.
+6. Mean intensity profiles over Doppler and azimuth bins.
+7. A static figure suitable for the midpoint presentation.
+
+Pair 3 is the default example.
+
+The heatmaps use a fixed numerical color range of 0–1. This supports consistent comparisons between frames within the same radar channel.
+
+The original Radarize preprocessing treats `radar_d` and `radar_de` differently. Therefore, equal displayed color values across the two channels should not be interpreted as physically equivalent measurements.
+
+### 8.5 AI-generated Corrections
+
+During the technical audit, Claude reported and corrected several issues:
+
+- Clarified that color-scale comparisons are valid within each radar channel, not directly between channels.
+- Corrected documentation of the actual radar input ranges.
+- Required `vl-convert-python==1.9.0.post1` for self-contained offline HTML export.
+- Removed the silent fallback to an internet-dependent HTML file.
+- Recomputed displayed velocity errors from full-precision values.
+- Corrected confusing numerical formatting, including negative zero.
+- Distinguished measured observations from untested hypotheses.
+- Clarified that the ten frames were selected based on their errors and are not a representative random sample.
+
+These changes were made before the team's independent Windows execution.
+
+### 8.6 Human Decisions
+
+**Accepted:** Interactive comparison of the five matched-speed pairs.
+
+**Accepted:** Pair 3 as the default presentation example.
+
+**Accepted:** Fixed color scales for comparisons within each channel.
+
+**Accepted:** Separate presentation of radar-input patterns, numerical velocity errors, and motion differences.
+
+**Modified:** Restricted cross-channel color interpretation after reviewing the preprocessing differences.
+
+**Deferred:** Any claim that visible radar patterns caused the observed prediction errors.
+
+**Deferred:** Generalizing conclusions from these ten selected frames to the complete dataset.
+
+The Human-only notebook was not modified.
+
+### 8.7 Independent Windows Verification
+
+The notebook was executed in the team's `RadaVisViz311` environment.
+
+Verified environment:
+
+| Package | Version |
+|---|---|
+| Python | 3.11.18 |
+| NumPy | 1.26.4 |
+| Pandas | 2.2.3 |
+| Altair | 6.0.0 |
+| Matplotlib | 3.10.7 |
+| vl-convert-python | 1.9.0.post1 |
+
+The Jupyter execution completed successfully and produced the executed notebook, HTML visualization, and PNG figure.
+
+The generated PNG was inspected in VS Code.
+
+The HTML was opened successfully in Chrome.
+
+**The team manually verified that:**
+
+- Pair 3 opens by default, showing frames 656 and 1050.
+- Pair 1 changes the displayed frames to 192 and 386.
+- Pair 5 changes the displayed frames to 188 and 62.
+- The numerical details, heatmaps, and profiles update when the pair changes.
+- Both radar channels are displayed.
+- The colorbars show the fixed 0–1 range.
+- The overview of all five pairs is visible.
+
+Chrome's Network panel was also inspected with Offline mode enabled. The displayed resources were local or embedded data, with no visible failed external requests.
+
+Claude additionally reported successful numerical, browser, and heatmap-pixel verification during its own audit. These AI-reported checks are distinguished from the team's manually observed Windows checks.
+
+### 8.8 Main Observations
+
+**O1 — Large error differences at similar speeds**
+
+Pair 3 compares frames 656 and 1050.
+
+| Property | Frame 656 | Frame 1050 |
+|---|---:|---:|
+| Reference speed | 0.225 m/s | 0.228 m/s |
+| 2D prediction error | 0.003 m/s | 0.076 m/s |
+
+Although the reference speeds are close, the prediction errors differ substantially.
+
+**O2 — Visually similar radar patterns do not guarantee similar prediction errors**
+
+In Pair 3, the two radar inputs share several visible structural patterns, but the errors are different.
+
+This is an observation, not proof of why the model behaves differently.
+
+**O3 — Differences in radar intensity**
+
+Claude reported differences in overall input values for several selected pairs.
+
+The relationship between input intensity and model error has not yet been tested over the complete sequence.
+
+**O4 — Residual matching limitations**
+
+Even with similar speed magnitudes, the selected frames can differ in lateral velocity, time, scene, and environmental conditions.
+
+Therefore, the comparison does not isolate a single cause of prediction error.
+
+### 8.9 Reflection
+
+This interaction improved the visual quality and scientific relevance of our Phase I analysis.
+
+The first two visualizations investigated when errors occur and how they vary with motion speed. The third visualization allows us to inspect the actual radar inputs corresponding to selected prediction outcomes.
+
+Claude was useful for designing an interactive comparison, implementing the visualizations, and identifying weaknesses in the original color-scale interpretation.
+
+Human verification was still necessary. We independently executed the notebook on Windows and checked the main browser interactions.
+
+An important lesson is that **visually similar inputs can accompany different model errors, but visual similarity alone does not explain the internal reasoning of the network**.
+
+This motivates further black-box investigation and provides questions for Phase II XAI analysis.
+
+### 8.10 Deliverables
+
+**Notebook:**
+
+`notebooks/phase1/03_radar_error_explorer.ipynb`
+
+**Executed notebook:**
+
+`notebooks/phase1/03_radar_error_explorer_executed.ipynb`
+
+**Interactive HTML:**
+
+`results/phase1/main_0/bot_beckman_5thfloor_1_radar_error_explorer.html`
+
+**Static presentation figure:**
+
+`results/phase1/main_0/bot_beckman_5thfloor_1_radar_comparison.png`
+
+**Local input data:**
+
+`results/phase1/main_0/bot_beckman_5thfloor_1_matched_cases.npz`
+
+The NPZ input is stored locally and is not intended for GitHub.
+
+**Final status:** Visualization implemented and successfully executed on Windows. Main browser interactions and displayed structure were inspected by the team. Findings remain exploratory and limited to five selected frame pairs.
+
+## 9. Overall Reflection on AI-Assisted Work
+
+### 9.1 Benefits of AI Assistance
 
 Claude was useful at several stages of our work.
 
@@ -778,7 +1002,7 @@ Claude was useful at several stages of our work.
 
 **Efficiency:** The selective-download approach avoided downloading the complete Radarize dataset just to begin the project.
 
-### 8.2 Problems and Limitations
+### 9.2 Problems and Limitations
 
 AI assistance did not eliminate technical or scientific difficulties.
 
@@ -793,7 +1017,7 @@ The main challenges included:
 
 We also found that a visualization can be technically correct while its interpretation remains uncertain.
 
-### 8.3 Human Verification and Corrections
+### 9.3 Human Verification and Corrections
 
 We independently checked important technical results instead of relying only on AI-generated descriptions.
 
@@ -811,7 +1035,7 @@ Our verification included:
 
 These checks allowed us to separate implementation correctness from scientific interpretation.
 
-### 8.4 Accepted, Modified, and Deferred Decisions
+### 9.4 Accepted, Modified, and Deferred Decisions
 
 | Decision | Outcome |
 |---|---|
@@ -826,7 +1050,7 @@ These checks allowed us to separate implementation correctness from scientific i
 | Investigate more held-out sequences | Planned |
 | Compare low-error and high-error radar heatmaps | Planned |
 
-### 8.5 Lessons Learned
+### 9.5 Lessons Learned
 
 Our experience highlights four important lessons.
 
@@ -846,7 +1070,7 @@ A large prediction error does not automatically mean that the neural network is 
 
 We preserved the preprocessing and inference scripts, validated their outputs, and documented the environment used for visualization.
 
-### 8.6 Comparison with Human-only Work
+### 9.6 Comparison with Human-only Work
 
 The group also maintains a separate Human-only Phase I notebook:
 
@@ -860,9 +1084,9 @@ A comparison of both pairs' approaches, visualizations, and conclusions will be 
 
 ---
 
-## 9. Phase I Summary and Remaining Work
+## 10. Phase I Summary and Remaining Work
 
-### 9.1 Completed Work
+### 10.1 Completed Work
 
 - Selected the Radarize Translation ResNet18 model.
 - Investigated its architecture and checkpoint requirements.
@@ -876,7 +1100,7 @@ A comparison of both pairs' approaches, visualizations, and conclusions will be 
 - Independently checked the main error and binning calculations.
 - Stored the notebooks, code, and documentation in the group GitHub repository.
 
-### 9.2 Remaining Limitations
+### 10.2 Remaining Limitations
 
 Our Phase I results currently cover only:
 
@@ -888,7 +1112,7 @@ We have not yet established whether the observed behavior generalizes to other e
 
 The suspected reference-data anomaly also requires additional investigation.
 
-### 9.3 Next Steps
+### 10.3 Next Steps
 
 1. Investigate the suspicious interval using available odometry or independent motion measurements.
 2. Evaluate additional held-out sequences and, where feasible, other platform types.
@@ -900,9 +1124,9 @@ For Phase II, candidate techniques include saliency-based analysis and intermedi
 
 ---
 
-## 10. Reproducibility and Evidence
+## 11. Reproducibility and Evidence
 
-### 10.1 Original Sources
+### 11.1 Original Sources
 
 **Radarize repository:**
 https://github.com/ConnectedSystemsLab/radarize_ae
@@ -913,7 +1137,7 @@ https://zenodo.org/records/11093859
 **RadaVis group repository:**
 https://github.com/Mehran-Farhadi/RadaVis
 
-### 10.2 Key Project Files
+### 11.2 Key Project Files
 
 **Preprocessing and inference**
 
@@ -943,7 +1167,7 @@ https://github.com/Mehran-Farhadi/RadaVis
 
 The raw radar data, model checkpoints, and large processed NPZ files are not included in the group repository.
 
-### 10.3 Evidence and Provenance Notes
+### 11.3 Evidence and Provenance Notes
 
 The original Claude conversation should be retained as the primary record of prompts and AI responses.
 

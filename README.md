@@ -235,7 +235,7 @@ This creates an environment for visualization without modifying the existing sys
 ### 5.3 Install Visualization Dependencies
 
 ```bash
-python -m pip install "numpy==1.26.4" "pandas==2.2.3" "altair==6.0.0" matplotlib ipykernel jupyterlab nbconvert nbclient nbformat
+python -m pip install "numpy==1.26.4" "pandas==2.2.3" "altair==6.0.0" "matplotlib==3.10.7" "vl-convert-python==1.9.0.post1" matplotlib ipykernel jupyterlab nbconvert nbclient nbformat
 ```
 
 These libraries provide numerical processing, data analysis, interactive visualization, and Jupyter execution.
@@ -595,7 +595,49 @@ Removing them changes the statistics of that speed bin but does not eliminate th
 
 The exclusion is an analytical comparison, **not a claim that the 14 reference measurements are incorrect**.
 
-### 8.6 Running the Visualization Notebooks
+### 8.6 Visualization 3 — Radar Input and Error Explorer
+
+**Notebook:**
+
+`notebooks/phase1/03_radar_error_explorer.ipynb`
+
+**Interactive HTML:**
+
+`results/phase1/main_0/bot_beckman_5thfloor_1_radar_error_explorer.html`
+
+**Static figure:**
+
+`results/phase1/main_0/bot_beckman_5thfloor_1_radar_comparison.png`
+
+The third visualization investigates the radar inputs associated with accurate and inaccurate velocity predictions.
+
+It compares five low-error/high-error frame pairs selected within narrow reference-speed intervals.
+
+Features include:
+
+- Interactive selection of five frame pairs.
+- Side-by-side visualization of `radar_d` and `radar_de`.
+- Fixed 0–1 color scales for comparison within each radar channel.
+- Ground-truth and predicted velocity values.
+- Two-dimensional prediction errors.
+- Overview plots comparing error, speed, and lateral velocity.
+- Doppler and azimuth intensity profiles.
+
+Pair 3 compares frames 656 and 1050, which have similar reference speeds (approximately 0.225 and 0.228 m/s) but substantially different prediction errors (approximately 0.003 and 0.076 m/s).
+
+The selected frames are exploratory examples, not a statistically representative sample. Visible input differences cannot establish what caused the model's prediction errors.
+
+The notebook was executed successfully on Windows using Python 3.11.18.
+
+For self-contained HTML export, the notebook requires:
+
+`vl-convert-python==1.9.0.post1`
+
+It was tested with Matplotlib 3.10.7.
+
+The HTML was inspected in Chrome, and pair selection was manually verified by the team.
+
+### 8.7 Running the Visualization Notebooks
 
 First activate the tested Windows environment:
 
